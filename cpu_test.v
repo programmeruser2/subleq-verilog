@@ -21,6 +21,11 @@ module cpu_test;
 	);
 	integer i;
 	initial begin
+		// Dump waveforms
+		`ifdef DUMP_WAVEFORM
+		$dumpfile("cpu.vcd");
+		$dumpvars(0, cpu_test);
+		`endif
 		reset = 1;
 		#20;
 		reset = 0;
