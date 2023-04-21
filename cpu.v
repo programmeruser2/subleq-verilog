@@ -4,7 +4,7 @@ module cpu(
 	input [63:0] mem_data,
 	output reg [63:0] mem_addr,
 	output reg [63:0] mem_write_bytes,
-	output reg mem_op
+	output reg [1:0] mem_op
 );
 	localparam state_fetch_a = 3'b000;
 	localparam state_fetch_b = 3'b001;
@@ -16,8 +16,9 @@ module cpu(
 	localparam state_fetch_b_val = 3'b111;
 	
 
-	localparam mem_write = 1;
-	localparam mem_read = 0;
+	localparam mem_write = 2'b01;
+	localparam mem_read = 2'b00;
+	localparam mem_inactive = 2'b11;
 	reg [2:0] next_state = state_fetch_a;
 	
 	reg [63:0] a, b;
@@ -27,12 +28,13 @@ module cpu(
 
 	always @(posedge reset) begin
 		next_state <= state_fetch_a;
+		mem_op <= mem_inactive;
 		pc <= 1'b0;
 	end
 	always @(posedge clk) begin
 		case (next_state)
 			state_fetch_a: begin
-				$display("pc=%h", pc);
+				//$display("pc=%h", pc);
 				mem_op <= mem_read;
 				mem_addr <= pc;
 				next_state <= state_fetch_b;	
@@ -54,7 +56,7 @@ module cpu(
 				mem_op <= mem_read;
 				mem_addr <= b;
 				next_state <= state_sub;
-				$display("fetch b val");
+				//$display("fetch b val");
 			end
 			state_sub: begin
 				//$display("old a_val=%h b_val=%h", a_val, mem_data);
@@ -66,11 +68,13 @@ module cpu(
 				mem_addr <= b;
 				//mem_write_bytes <= b_val;
 				mem_write_bytes <= mem_data - a_val;
-				//$display("write %h to addr %h", b_val, b);
+				//$display("write %h to addr %h", mem_data - a_val, b);
 				next_state <= state_branch;
 			end 
 			state_branch: begin
-				$display("branch, b_val=0x%h", b_val);
+				//$display("branch state");
+				mem_op <= mem_inactive;
+				//$display("branch, b_val=0x%h", b_val);
 				if (b_val <= 0) begin 
 					// fetch c_val
 					next_state <= state_fetch_c;
@@ -85,6 +89,7 @@ module cpu(
 				next_state <= state_c_set_pc;
 			end
 			state_c_set_pc: begin
+				mem_op <= mem_inactive;
 				pc <= mem_data;
 				next_state <= state_fetch_a;
 			end

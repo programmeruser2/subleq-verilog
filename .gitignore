@@ -1,4 +1,5 @@
 *.vvp
 *.vcd
 *.swp
-
+*.bin
+__pycache__/
